@@ -5,7 +5,7 @@
  * Written by Daniel Fekete
  */
 
-namespace Webshop\Components\Shipping\ConfigLoader;
+namespace Webshop\Components\Shipping\Contracts;
 
 
 interface ConfigLoaderInterface

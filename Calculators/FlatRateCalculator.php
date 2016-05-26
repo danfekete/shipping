@@ -3,8 +3,7 @@
 namespace Webshop\Components\Shipping\Calculators;
 
 
-use Webshop\Components\Configurable\ConfigOptionsTrait;
-use Webshop\Components\Shipping\ShipmentInterface;
+use Webshop\Components\Shipping\Contracts\ShipmentInterface;
 
 class FlatRateCalculator extends Calculator {
 

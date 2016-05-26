@@ -15,7 +15,7 @@ trait ShippableTrait {
     protected $heightName = 'height';
     protected $depthName = 'depth';
 
-
+    
 
     /**
      * Get Mass object of the given attribute

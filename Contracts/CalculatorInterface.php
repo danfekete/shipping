@@ -1,7 +1,7 @@
 <?php
 
-namespace Webshop\Components\Shipping\Calculators;
-use Webshop\Components\Shipping\ShipmentInterface;
+namespace Webshop\Components\Shipping\Contracts;
+
 use Illuminate\Contracts\Foundation\Application;
 
 interface CalculatorInterface {

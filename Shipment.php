@@ -3,8 +3,10 @@
 namespace Webshop\Components\Shipping;
 
 
-use Webshop\Components\Shipping\Address\AddressInterface;
+use Webshop\Components\Address\Contracts\AddressInterface;
 use Illuminate\Support\Collection;
+use Webshop\Components\Shipping\Contracts\ShipmentInterface;
+use Webshop\Components\Shipping\Contracts\ShippableInterface;
 
 class Shipment implements ShipmentInterface {
 

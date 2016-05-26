@@ -5,6 +5,7 @@ namespace Webshop\Components\Shipping\Calculators;
 
 use Illuminate\Contracts\Foundation\Application;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Webshop\Components\Shipping\Contracts\CalculatorInterface;
 
 abstract class Calculator implements CalculatorInterface {
 

@@ -6,7 +6,7 @@
  * Time: 00:02
  */
 
-namespace Webshop\Components\Shipping;
+namespace Webshop\Components\Shipping\Contracts;
 
 
 interface ShippableInterface {

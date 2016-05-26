@@ -6,10 +6,10 @@
  * Time: 00:06
  */
 
-namespace Webshop\Components\Shipping;
+namespace Webshop\Components\Shipping\Contracts;
 
 
-use Webshop\Components\Shipping\Address\AddressInterface;
+use Webshop\Components\Address\Contracts\AddressInterface;
 use Illuminate\Support\Collection;
 
 interface ShipmentInterface {
