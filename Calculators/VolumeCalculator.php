@@ -3,8 +3,8 @@
 namespace Webshop\Components\Shipping\Calculators;
 
 
-use Webshop\Components\Configurable\ConfigOptionsTrait;
-use Webshop\Components\Shipping\ShipmentInterface;
+//use Webshop\Components\Configurable\ConfigOptionsTrait;
+use Webshop\Components\Shipping\Contracts\ShipmentInterface;
 
 class VolumeCalculator extends Calculator {
     use ConfigOptionsTrait;
