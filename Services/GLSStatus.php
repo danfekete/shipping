@@ -35,7 +35,7 @@ class GLSStatus implements ParcelStatusInterface
      */
     public function getRawStatus()
     {
-        return trim($this->crawler->filter('td')->eq(0)->text());
+        return trim($this->crawler->filter('td')->eq(1)->text());
     }
 
     /**
@@ -86,7 +86,7 @@ class GLSStatus implements ParcelStatusInterface
     public function getExtraInfo()
     {
         return [
-            'info' => $this->crawler->filter('td')->eq(3)->text()
+            'info' => trim($this->crawler->filter('td')->eq(3)->text())
         ];
     }
 

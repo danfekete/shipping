@@ -18,6 +18,7 @@ use Webshop\Components\Shipping\Contracts\ParcelInterface;
 use Webshop\Components\Shipping\Contracts\ParcelServiceInterface;
 use Webshop\Components\Shipping\Contracts\ParcelStatusInterface;
 use Webshop\Components\Shipping\Contracts\ShipmentInterface;
+use Webshop\Components\Shipping\Exceptions\RequiredOptionsMissing;
 use Webshop\Components\Shipping\Exceptions\ResponseError;
 use Webshop\Components\Shipping\Exceptions\SourceAddressMissing;
 use Webshop\Components\Shipping\Exceptions\TrackingCodeNotFound;
@@ -35,7 +36,7 @@ class GLS implements ParcelServiceInterface
     ];
 
     protected $url;
-    protected $settings;
+    protected $options;
     /**
      * @var AddressInterface
      */
@@ -48,30 +49,9 @@ class GLS implements ParcelServiceInterface
     /**
      * GLS constructor.
      */
-    public function __construct($settings)
+    public function __construct()
     {
-        $resolver = new OptionsResolver();
-        $resolver->setDefaults([
-            'countryCode' => 'HU',
-            'content' => 'Package',
-            'packageCount' => 1,
-            'pickupDate' => Carbon::now(),
-            'username' => env('GLS_USERNAME', ''),
-            'password' => env('GLS_PASSWORD', ''),
-            'senderid' => env('GLS_SENDER_ID', ''),
-            'COD' => 0,
-            'CODRef' => '', // only needed when COD is > 0,
-            'printerTemplate' => 'A6_ONA4',
-            'printLabel' => true,
-        ]);
-        $resolver->setRequired(['countryCode', 'packageCount', 'pickupDate', 'username', 'password', 'senderid', 'printerTemplate', 'printLabel']);
-        $resolver->setAllowedTypes('pickupDate', Carbon::class);
-        $resolver->setAllowedTypes('COD', 'double');
-        $resolver->setAllowedTypes('printLabel', 'bool');
-        $this->settings = $resolver->resolve($settings);
 
-
-        $this->url = strtoupper($settings['countryCode']);
     }
 
     public function addService($serviceCode, $param)
@@ -116,11 +96,14 @@ class GLS implements ParcelServiceInterface
     public function generateParcel(ShipmentInterface $shipment)
     {
         if(empty($this->sourceAddress)) throw new SourceAddressMissing;
-        $client = new \SoapClient($this->url);
+        if(empty($this->options)) throw new RequiredOptionsMissing;
+
+        $url = $this->urls[$this->options['countryCode']];
+        $client = new \SoapClient($url);
         $args = [
-            'username' => $this->settings['username'],
-            'password' => $this->settings['password'],
-            'senderid' => $this->settings['senderid'],
+            'username' => $this->options['username'],
+            'password' => $this->options['password'],
+            'senderid' => $this->options['senderid'],
             // From:
             'sender_name' => $this->sourceAddress->getName(),
             'sender_address' => $this->sourceAddress->getFullStreetAddress(),
@@ -138,12 +121,12 @@ class GLS implements ParcelServiceInterface
             'consig_phone' => '',
             'consig_email' => '',
             // Package
-            'content' => $this->settings['content'],
+            'content' => $this->options['content'],
             'clientref' => '',
-            'codamount' => $this->settings['COD'],
-            'codref' => $this->settings['CODRef'],
+            'codamount' => $this->options['COD'],
+            'codref' => $this->options['CODRef'],
             'services' => $this->services,
-            'printertemplate' => $this->settings['printerTemplate'],
+            'printertemplate' => $this->options['printerTemplate'],
             'printit' => true,
             'timestamp' => Carbon::now()->format('YmdHis'),
         ];
@@ -187,19 +170,57 @@ class GLS implements ParcelServiceInterface
         $html = $this->getTrackingPage($parcel)->getBody()->getContents();
 
         $dom = new Crawler($html);
-        $row = $dom->filter('table tr.colored_0, table tr.colored_1')->first();
+        $rows = $dom->filter('table tr.colored_0, table tr.colored_1')->each(function(Crawler $node) {
+            return new GLSStatus($node);
+        });
 
-        if (!count($row)) throw new TrackingCodeNotFound($parcel->getParcelId());
+        if (!count($rows)) throw new TrackingCodeNotFound($parcel->getParcelId());
 
-        
+        return $rows;
 
         /*$data = array_map('trim', [
-            'date' => $row->filter('td')->eq(0)->text(),
-            'status' => $row->filter('td')->eq(1)->text(),
-            'depot' => $row->filter('td')->eq(2)->text(),
-            'info' => $row->filter('td')->eq(3)->text()
+            'date' => $rows->filter('td')->eq(0)->text(),
+            'status' => $rows->filter('td')->eq(1)->text(),
+            'depot' => $rows->filter('td')->eq(2)->text(),
+            'info' => $rows->filter('td')->eq(3)->text()
         ]);*/
 
         //return $data['status'];
+    }
+
+    /**
+     * Set the service options
+     * @param $options
+     */
+    protected function setOptions($options)
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'countryCode' => 'HU',
+            'content' => 'Package',
+            'packageCount' => 1,
+            'pickupDate' => Carbon::now(),
+            'username' => env('GLS_USERNAME', ''),
+            'password' => env('GLS_PASSWORD', ''),
+            'senderid' => env('GLS_SENDER_ID', ''),
+            'COD' => 0,
+            'CODRef' => '', // only needed when COD is > 0,
+            'printerTemplate' => 'A6_ONA4',
+            'printLabel' => true,
+        ]);
+        $resolver->setRequired(['countryCode', 'packageCount', 'pickupDate', 'username', 'password', 'senderid', 'printerTemplate', 'printLabel']);
+        $resolver->setAllowedTypes('pickupDate', Carbon::class);
+        $resolver->setAllowedTypes('COD', 'double');
+        $resolver->setAllowedTypes('printLabel', 'bool');
+        $this->options = $resolver->resolve($options);
+    }
+
+    /**
+     * Return the service options
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return $this->options;
     }
 }
