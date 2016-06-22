@@ -89,4 +89,16 @@ interface ShipmentInterface {
      * @return Collection|ShippableInterface[]
      */
     public function getShipment();
+
+    /**
+     * Return TRUE if shipment is Cash-on-delivery
+     * @return boolean
+     */
+    public function isCOD();
+
+    /**
+     * Set COD
+     * @param boolean $value
+     */
+    public function setCOD($value);
 }

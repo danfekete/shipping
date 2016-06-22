@@ -15,6 +15,7 @@ class Shipment implements ShipmentInterface {
      * @var AddressInterface
      */
     protected $address;
+    protected $cod;
 
     private $shipment;
 
@@ -147,5 +148,22 @@ class Shipment implements ShipmentInterface {
     public function getDestinationAddress()
     {
         return $this->address;
+    }
+
+    /**
+     * Return TRUE if shipment is Cash-on-delivery
+     * @return boolean
+     */
+    public function isCOD()
+    {
+        $this->cod = true;
+    }
+
+    /**
+     * Set COD
+     * @param boolean $value
+     */
+    public function setCOD($value) {
+        $this->cod = $value;
     }
 }

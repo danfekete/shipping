@@ -14,6 +14,7 @@ use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Webshop\Components\Address\Contracts\AddressInterface;
+use Webshop\Components\Shipping\Contracts\LabelInterface;
 use Webshop\Components\Shipping\Contracts\ParcelInterface;
 use Webshop\Components\Shipping\Contracts\ParcelServiceInterface;
 use Webshop\Components\Shipping\Contracts\ParcelStatusInterface;
@@ -45,6 +46,11 @@ class GLS implements ParcelServiceInterface
      * @var array
      */
     protected $services = [];
+
+    /**
+     * @var LabelInterface
+     */
+    protected $labelType;
 
     /**
      * GLS constructor.
@@ -123,12 +129,14 @@ class GLS implements ParcelServiceInterface
             // Package
             'content' => $this->options['content'],
             'clientref' => '',
-            'codamount' => $this->options['COD'],
+            'codamount' => $shipment->isCOD() ? $shipment->getTotalValue() : 0,
             'codref' => $this->options['CODRef'],
             'services' => $this->services,
-            'printertemplate' => $this->options['printerTemplate'],
-            'printit' => true,
+            'printertemplate' => $this->labelType->getType(),
+            'printit' => $this->labelType->getType() == LabelInterface::NONE ? false : true,
             'timestamp' => Carbon::now()->format('YmdHis'),
+            'pcount' => $this->options['packageCount'],
+            'pickupdate' => $this->options['pickupDate']
         ];
         $args['hash'] = $this->getHash($args);
         $response = $client->__soapCall('printlabel', $args);
@@ -136,6 +144,8 @@ class GLS implements ParcelServiceInterface
 
         return new Parcel($response['pcls'][0], base64_decode($response['pdfdata']));
     }
+
+
 
     /**
      * Return a tracking URL for a given parcel
@@ -177,16 +187,28 @@ class GLS implements ParcelServiceInterface
         if (!count($rows)) throw new TrackingCodeNotFound($parcel->getParcelId());
 
         return $rows;
-
-        /*$data = array_map('trim', [
-            'date' => $rows->filter('td')->eq(0)->text(),
-            'status' => $rows->filter('td')->eq(1)->text(),
-            'depot' => $rows->filter('td')->eq(2)->text(),
-            'info' => $rows->filter('td')->eq(3)->text()
-        ]);*/
-
-        //return $data['status'];
     }
+
+    /**
+     * Calculate rate for Shipment
+     * @param ShipmentInterface $shipment
+     * @return mixed
+     */
+    public function calculateRate(ShipmentInterface $shipment)
+    {
+        // TODO: Implement calculateRate() method.
+    }
+
+    /**
+     * Set the label type to print
+     * @param LabelInterface $label
+     * @return mixed
+     */
+    public function setLabelType(LabelInterface $label)
+    {
+        $this->labelType = $label;
+    }
+
 
     /**
      * Set the service options
@@ -197,13 +219,13 @@ class GLS implements ParcelServiceInterface
         $resolver = new OptionsResolver();
         $resolver->setDefaults([
             'countryCode' => 'HU',
-            'content' => 'Package',
+            //'content' => 'Package',
             'packageCount' => 1,
             'pickupDate' => Carbon::now(),
             'username' => env('GLS_USERNAME', ''),
             'password' => env('GLS_PASSWORD', ''),
             'senderid' => env('GLS_SENDER_ID', ''),
-            'COD' => 0,
+            //'COD' => 0,
             'CODRef' => '', // only needed when COD is > 0,
             'printerTemplate' => 'A6_ONA4',
             'printLabel' => true,
@@ -223,4 +245,42 @@ class GLS implements ParcelServiceInterface
     {
         return $this->options;
     }
+
+    /**
+     * Return TRUE if service can create a parcel
+     * @return boolean
+     */
+    public function canCreateParcel()
+    {
+        return true;
+    }
+
+    /**
+     * Return TRUE if it can print a label for the parcel
+     * @return boolean
+     */
+    public function canPrintLabel()
+    {
+        return true;
+    }
+
+    /**
+     * Return TRUE if it can calculate rate for parcel
+     * @return boolean
+     */
+    public function canCalculateRate()
+    {
+        return false;
+    }
+
+    /**
+     * Return TRUE if it can track the parcel
+     * @return boolean
+     */
+    public function canTrackParcel()
+    {
+        return true;
+    }
+
+
 }

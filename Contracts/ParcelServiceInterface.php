@@ -8,9 +8,32 @@
 
 namespace Webshop\Components\Shipping\Contracts;
 
-
 interface ParcelServiceInterface
 {
+    /**
+     * Return TRUE if service can create a parcel
+     * @return boolean
+     */
+    public function canCreateParcel();
+
+    /**
+     * Return TRUE if it can print a label for the parcel
+     * @return boolean
+     */
+    public function canPrintLabel();
+
+    /**
+     * Return TRUE if it can calculate rate for parcel
+     * @return boolean
+     */
+    public function canCalculateRate();
+
+    /**
+     * Return TRUE if it can track the parcel
+     * @return boolean
+     */
+    public function canTrackParcel();
+
     /**
      * Return the parcel service provider name
      * @return string
@@ -23,6 +46,13 @@ interface ParcelServiceInterface
      * @return ParcelInterface
      */
     public function generateParcel(ShipmentInterface $shipment);
+
+    /**
+     * Calculate rate for Shipment
+     * @param ShipmentInterface $shipment
+     * @return mixed
+     */
+    public function calculateRate(ShipmentInterface $shipment);
 
     /**
      * Return a tracking URL for a given parcel
@@ -38,4 +68,11 @@ interface ParcelServiceInterface
      * @return ParcelStatusInterface
      */
     public function getParcelStatus(ParcelInterface $parcel);
+
+    /**
+     * Set the label type to print
+     * @param LabelInterface $label
+     * @return mixed
+     */
+    public function setLabelType(LabelInterface $label);
 }
